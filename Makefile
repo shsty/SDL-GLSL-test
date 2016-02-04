@@ -1,2 +1,2 @@
 main: main.cpp
-	g++ -std=c++0x main.cpp -lSDL2 -omain
+	g++ -std=c++0x main.cpp -lGL -lSDL2 -omain
