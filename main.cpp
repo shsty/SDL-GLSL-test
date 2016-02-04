@@ -1,19 +1,17 @@
 #include <cstdio>
 #include <iostream>
 #include <string>
-#include <SDL2/SDL.h>
 #include <GL/gl.h>
+#include <SDL2/SDL.h>
+
+#include "display.h"
 
 const char * WINDOW_NAME = "SDL & GL test";
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
-SDL_Window *window;
-//SDL_Renderer *renderer = nullptr;
-SDL_GLContext context;
-
-void sdldie(const char * msg){
+void sdlDie(const char * msg){
     fprintf(stderr, "%s: %s\n", msg, SDL_GetError());
     SDL_Quit(); 
     exit(1);
@@ -42,10 +40,10 @@ void checkSDLError(int line = -1)
     return texture;
 }*/
 
-int main(int argc, char *argv[]){
+void initwindow(SDL_Window ** window, SDL_GLContext * context){
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0 ){
         std::cerr << SDL_GetError() << std::endl;
-        return 1;
+        exit(1);
     }
 
     atexit(SDL_Quit);
@@ -59,7 +57,7 @@ int main(int argc, char *argv[]){
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
-    window = SDL_CreateWindow(
+    *window = SDL_CreateWindow(
             WINDOW_NAME,
             SDL_WINDOWPOS_UNDEFINED,
             SDL_WINDOWPOS_UNDEFINED,
@@ -67,17 +65,19 @@ int main(int argc, char *argv[]){
             SCREEN_HEIGHT,
             SDL_WINDOW_OPENGL
     );
-    if (window == nullptr) sdldie("Unable to create window");
+    if (*window == nullptr) sdlDie("Unable to create window");
 
-    context = SDL_GL_CreateContext(window);
+    *context = SDL_GL_CreateContext(*window);
     checkSDLError();
 
     SDL_version sdlversion;
     SDL_GetVersion(&sdlversion);
     std::cout << "SDL Version " << (int)sdlversion.major << "." << (int)sdlversion.minor << "." << (int)sdlversion.patch << std::endl;
     std::cout << "OpenGL Version " << glGetString(GL_VERSION) << std::endl;
+
+    SDL_GL_SetSwapInterval(1);
     /*renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (renderer == nullptr) sdldie("Unable to create renderer");
+    if (renderer == nullptr) sdlDie("Unable to create renderer");
 
     SDL_Texture *texture = LoadImage("hello.bmp");
     if (texture == nullptr){
@@ -93,14 +93,23 @@ int main(int argc, char *argv[]){
 
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);*/
+}
 
-    glClearColor(0.0, 1.0, 1.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    SDL_GL_SwapWindow(window);
-
-    SDL_Delay(500);
+void destroywindow(SDL_Window * window, SDL_GLContext context){
+    SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
-
     SDL_Quit();
+}
+
+int main(int argc, char *argv[]){
+    SDL_Window * window;
+    SDL_GLContext context;
+
+    initwindow(&window, &context);
+
+    drawscene(window);
+
+    destroywindow(window, context);
+
     return 0;
 }
