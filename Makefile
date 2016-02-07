@@ -1,20 +1,23 @@
 DIR = bin
 BIN = $(DIR)/main
 OBJS = $(DIR)/main.o $(DIR)/display.o
+CXX = g++ -std=c++0x -g
 
-$(BIN): $(OBJS) $(DIR)
-	g++ -std=c++0x $(OBJS) -lGL -lSDL2 -o$@
+$(BIN): $(DIR) $(OBJS)
+	$(CXX) $(OBJS) -lGL -lSDL2 -o$@
 
 $(DIR):
 	mkdir $(DIR)
 
-$(OBJS): $(DIR)/%.o: %.cpp $(DIR)
-	g++ -std=c++0x -c $(cflags) $< -o$@
+$(OBJS): $(DIR)/%.o: %.cpp
+	$(CXX) -std=c++0x -c $(cflags) $< -o$@
 
-$(DIR)/main.o: main.cpp display.h
-$(DIR)/display.o: display.cpp
+$(DIR)/main.o: display.h
 
-.PHONY: clean
+.PHONY: clean test
+
+test:
+	./$(BIN)
 
 clean:
 	rm -v $(BIN) $(OBJS)

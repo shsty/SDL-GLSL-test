@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iostream>
 #define GL_GLEXT_PROTOTYPES 1
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
@@ -32,6 +33,9 @@ void drawscene(SDL_Window * window){
     char *vertexInfoLog;
     char *fragmentInfoLog;
     char *shaderProgramInfoLog;
+
+    const char *vertexfile = "tutorial2.vert";
+    const char *fragmentfile = "tutorial2.frag";
 
     /* We're going to create a simple diamond made from lines */
     const GLfloat diamond[4][2] = {
@@ -91,8 +95,18 @@ void drawscene(SDL_Window * window){
     glEnableVertexAttribArray(1);
 
     /* Read our shaders into the appropriate buffers */
-    vertexsource = filetobuf("tutorial2.vert");
-    fragmentsource = filetobuf("tutorial2.frag");
+    vertexsource = filetobuf(vertexfile);
+    fragmentsource = filetobuf(fragmentfile);
+
+    if (!vertexsource) {
+        std::cerr << "Cannot open vertex shader file : " << vertexfile << std::endl;
+        return;
+    }
+
+    if (!fragmentsource) {
+        std::cerr << "Cannot open fragment shader file : " << fragmentfile << std::endl;
+        return;
+    }
 
     /* Create an empty vertex shader handle */
     vertexshader = glCreateShader(GL_VERTEX_SHADER);
@@ -116,6 +130,7 @@ void drawscene(SDL_Window * window){
         glGetShaderInfoLog(vertexshader, maxLength, &maxLength, vertexInfoLog);
 
         /* Handle the error in an appropriate way such as displaying a message or writing to a log file. */
+        std::cerr << "Vertex shader compilation failed: \n" << vertexInfoLog;
         /* In this simple program, we'll just leave */
         free(vertexInfoLog);
         return;
@@ -143,6 +158,7 @@ void drawscene(SDL_Window * window){
         glGetShaderInfoLog(fragmentshader, maxLength, &maxLength, fragmentInfoLog);
 
         /* Handle the error in an appropriate way such as displaying a message or writing to a log file. */
+        std::cerr << "Fragment shader compilation failed: \n" << fragmentInfoLog;
         /* In this simple program, we'll just leave */
         free(fragmentInfoLog);
         return;
@@ -185,6 +201,8 @@ void drawscene(SDL_Window * window){
         glGetProgramInfoLog(shaderprogram, maxLength, &maxLength, shaderProgramInfoLog);
 
         /* Handle the error in an appropriate way such as displaying a message or writing to a log file. */
+
+        std::cerr << "Shader Program linking failed: \n" << shaderProgramInfoLog;
         /* In this simple program, we'll just leave */
         free(shaderProgramInfoLog);
         return;

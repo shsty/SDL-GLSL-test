@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <iostream>
 #include <string>
+#define GL_GLEXT_PROTOTYPES 1
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
 
@@ -70,6 +71,7 @@ void initwindow(SDL_Window ** window, SDL_GLContext * context){
     *context = SDL_GL_CreateContext(*window);
     checkSDLError();
 
+    std::cout << "------SDL Test------\n";
     SDL_version sdlversion;
     SDL_GetVersion(&sdlversion);
     std::cout << "SDL Version " << (int)sdlversion.major << "." << (int)sdlversion.minor << "." << (int)sdlversion.patch << std::endl;
