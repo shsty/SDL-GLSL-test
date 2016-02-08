@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <iostream>
+#include <cmath>
 #define GL_GLEXT_PROTOTYPES 1
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
@@ -23,6 +24,14 @@ char* filetobuf(const char *file)
     buf[length] = 0; /* Null terminator */
 
     return buf; /* Return the buffer */
+}
+
+void checkglerr(){
+    GLenum glerror = glGetError();
+    if (glerror != GL_NO_ERROR){
+        std::cerr << "GL Error : " << glerror << std::endl;
+        throw;
+    }
 }
 
 /*SDL_Texture* LoadImage(SDL_Renderer renderer, const char * file){
@@ -51,6 +60,7 @@ void drawscene(SDL_Window * window){
     GLuint vertexshader, fragmentshader;
     GLuint shaderprogram;
 
+    glEnable(GL_MULTISAMPLE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -103,6 +113,9 @@ void drawscene(SDL_Window * window){
     glAttachShader(shaderprogram, vertexshader);
     glAttachShader(shaderprogram, fragmentshader);
 
+    glBindAttribLocation(shaderprogram, 0, "in_Position");
+    glBindAttribLocation(shaderprogram, 1, "in_Color");
+
     glLinkProgram(shaderprogram);
 
     glGetProgramiv(shaderprogram, GL_LINK_STATUS, (int *)&IsLinked);
@@ -152,8 +165,9 @@ void drawscene(SDL_Window * window){
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(1);
 
-    glBindAttribLocation(shaderprogram, 0, "in_Position");
-    glBindAttribLocation(shaderprogram, 1, "in_Color");
+    GLuint trID = glGetUniformLocation(shaderprogram, "tr");
+
+    checkglerr();
 
     tmpimage = IMG_Load(imgfile); 
     if (!tmpimage){
@@ -170,26 +184,28 @@ void drawscene(SDL_Window * window){
     glGenTextures(1, &texture[0]);
     glBindTexture( GL_TEXTURE_2D, texture[0]);
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, TextureImage[0]->w, TextureImage[0]->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, TextureImage[0]->pixels );
-    GLenum glerror = glGetError();
-    if (glerror != GL_NO_ERROR){
-        std::cerr << "GL Error : " << glerror << std::endl;
-        return;
-    }
 
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 3 );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-    glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bordercolor );
-    SDL_FreeSurface(TextureImage[0]);
 
-    for (int i = 4; i <= 4; i++)
+    glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bordercolor );
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    SDL_FreeSurface(TextureImage[0]);
+    checkglerr();
+
+    for (float i = 0.0; i <= 3.0; i+=0.033)
     {
+        glUniform4f(trID, cosh(i/2), 0.0f, sinh(i/2), 0.0f);
         glClearColor(0.2, 0.2, 0.2, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
-        glDrawArrays(GL_POLYGON, 0, i);
+        glDrawArrays(GL_POLYGON, 0, 4);
+        checkglerr();
         SDL_GL_SwapWindow(window);
-        SDL_Delay(2000);
+        SDL_Delay(33);
     }
 
     /* Cleanup all the things we bound and allocated */
