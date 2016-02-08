@@ -4,6 +4,7 @@
 #define GL_GLEXT_PROTOTYPES 1
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "display.h"
 
@@ -48,6 +49,12 @@ void initwindow(SDL_Window ** window, SDL_GLContext * context){
     }
 
     atexit(SDL_Quit);
+
+    int flags = IMG_INIT_JPG | IMG_INIT_PNG;
+    if ( (IMG_Init(flags) & flags) != flags ){
+        std::cerr << "IMG_Init failed : \n" << IMG_GetError() << std::endl;
+        exit(1);
+    }
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -98,6 +105,7 @@ void initwindow(SDL_Window ** window, SDL_GLContext * context){
 }
 
 void destroywindow(SDL_Window * window, SDL_GLContext context){
+    IMG_Quit();
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();

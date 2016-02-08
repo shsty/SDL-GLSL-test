@@ -2,9 +2,10 @@ DIR = bin
 BIN = $(DIR)/main
 OBJS = $(DIR)/main.o $(DIR)/display.o
 CXX = g++ -std=c++0x -g
+LIBS = -lGL -lSDL2_image -lSDL2
 
 $(BIN): $(DIR) $(OBJS)
-	$(CXX) $(OBJS) -lGL -lSDL2 -o$@
+	$(CXX) $(OBJS) $(LIBS) -o$@
 
 $(DIR):
 	mkdir $(DIR)

@@ -51,6 +51,9 @@ void drawscene(SDL_Window * window){
     GLuint vertexshader, fragmentshader;
     GLuint shaderprogram;
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     /* Read our shaders into the appropriate buffers */
     vertexsource = filetobuf(vertexfile);
     fragmentsource = filetobuf(fragmentfile);
@@ -128,8 +131,9 @@ void drawscene(SDL_Window * window){
         {  0.0,  1.0,  0.0  }, /* Green */
         {  0.0,  0.0,  1.0  }, /* Blue */
         {  1.0,  1.0,  1.0  } }; /* White */
-    const char * bmpfile = "mario.bmp";
-    SDL_Surface *TextureImage[1];
+    const GLfloat bordercolor[4] = {0.0, 0.0, 0.0, 0.0};
+    const char * imgfile = "images2.png";
+    SDL_Surface *TextureImage[1], *tmpimage;
     GLuint texture[1];
 
     /* Allocate and assign a Vertex Array Object to our handle */
@@ -151,32 +155,41 @@ void drawscene(SDL_Window * window){
     glBindAttribLocation(shaderprogram, 0, "in_Position");
     glBindAttribLocation(shaderprogram, 1, "in_Color");
 
-    if (( TextureImage[0] = SDL_LoadBMP(bmpfile) )){
-        glGenTextures(1, &texture[0]);
-        glBindTexture( GL_TEXTURE_2D, texture[0]);
-        glTexImage2D( GL_TEXTURE_2D, 0, 3, TextureImage[0]->w, TextureImage[0]->h, 0, GL_BGR, GL_UNSIGNED_BYTE, TextureImage[0]->pixels );
-
-        GLenum glerror = glGetError();
-        if (glerror != GL_NO_ERROR){
-            std::cerr << "GL Error : " << glerror << std::endl;
-            return;
-        }
-
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    }else{
-        std::cerr << "Failed to load image : " << bmpfile << std::endl;
+    tmpimage = IMG_Load(imgfile); 
+    if (!tmpimage){
+        std::cerr << "Failed to load image : " << imgfile << std::endl;
         return;
     }
+    TextureImage[0] = SDL_ConvertSurfaceFormat(tmpimage, SDL_PIXELFORMAT_ABGR8888, 0);
+    if (!TextureImage[0]){
+        std::cerr << "Failed to convert image : \n" << SDL_GetError() << std::endl;
+        return;
+    }
+    SDL_FreeSurface(tmpimage);
+
+    glGenTextures(1, &texture[0]);
+    glBindTexture( GL_TEXTURE_2D, texture[0]);
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, TextureImage[0]->w, TextureImage[0]->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, TextureImage[0]->pixels );
+    GLenum glerror = glGetError();
+    if (glerror != GL_NO_ERROR){
+        std::cerr << "GL Error : " << glerror << std::endl;
+        return;
+    }
+
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+    glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bordercolor );
     SDL_FreeSurface(TextureImage[0]);
 
     for (int i = 4; i <= 4; i++)
     {
-        glClearColor(0.0, 0.0, 0.0, 1.0);
+        glClearColor(0.2, 0.2, 0.2, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
         glDrawArrays(GL_POLYGON, 0, i);
         SDL_GL_SwapWindow(window);
-        SDL_Delay(1000);
+        SDL_Delay(2000);
     }
 
     /* Cleanup all the things we bound and allocated */
