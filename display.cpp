@@ -145,7 +145,7 @@ void drawscene(SDL_Window * window){
         {  0.0,  0.0,  1.0  }, /* Blue */
         {  1.0,  1.0,  1.0  } }; /* White */
     const GLfloat bordercolor[4] = {0.0, 0.0, 0.0, 0.0};
-    const char * imgfile = "images2.png";
+    const char * imgfile = "img/433-t012.png";
     SDL_Surface *TextureImage[1], *tmpimage;
     GLuint texture[1];
 
@@ -186,25 +186,46 @@ void drawscene(SDL_Window * window){
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, TextureImage[0]->w, TextureImage[0]->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, TextureImage[0]->pixels );
 
     //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 3 );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glGenerateMipmap( GL_TEXTURE_2D );
 
     glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bordercolor );
-    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
     SDL_FreeSurface(TextureImage[0]);
     checkglerr();
 
-    for (float i = 0.0; i <= 3.0; i+=0.033)
+    //debugging
+    /*std::cout << "Multisample ";
+    if (GL_TRUE == glIsEnabled(GL_SAMPLE_ALPHA_TO_ONE)) {
+        std::cout << "on" << std::endl;
+    } else {
+        std::cout << "off" << std::endl;
+    }*/
+
+    for (float i = 0.0;; i+=1.0/30)
     {
-        glUniform4f(trID, cosh(i/2), 0.0f, sinh(i/2), 0.0f);
+        const float ra2 = sqrt(2)+1;
+        const float d = 2*atanh(sqrt(ra2) - sqrt(ra2-1));
+        float j = fmod(i,4*d);
+        //glUniform4f(trID, 1.0f, 0.0f, 0.0f, 0.0f);/*
+        glUniform4f(trID, cosh(j/2), 0.0f, sinh(j/2), 0.0f);
+        // */
         glClearColor(0.2, 0.2, 0.2, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
         glDrawArrays(GL_POLYGON, 0, 4);
         checkglerr();
         SDL_GL_SwapWindow(window);
+
+        SDL_Event event;
+        bool quit = false;
+        while (SDL_PollEvent(&event))
+            if (event.type == SDL_QUIT) quit = true;
+        if (quit) break;
+
         SDL_Delay(33);
     }
 

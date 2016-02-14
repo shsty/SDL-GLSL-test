@@ -11,7 +11,7 @@ $(DIR):
 	mkdir $(DIR)
 
 $(OBJS): $(DIR)/%.o: %.cpp
-	$(CXX) -std=c++0x -c $(cflags) $< -o$@
+	$(CXX) -c $< -o$@
 
 $(DIR)/main.o: display.h
 
